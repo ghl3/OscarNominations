@@ -12,6 +12,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 def parse_data(FEATURES):
 
     # Feature Key:
@@ -103,20 +105,23 @@ def parse_data(FEATURES):
 
 def main():
 
-    feature_names = ["Cinematography", "Writing", "Directing", "Film Editing"]
+    feature_names = ['Animated Feature Film', 'Cinematography', 'Costume Design', 'Directing', 
+                     'Documentary (Feature)', 'Film Editing', 'Foreign Language Film', 'Makeup', 
+                     'Music (Scoring)', 'Music (Song)', 'Sound Editing', 'Visual Effects',
+                     'Writing', 'Art Direction',
+                     'Actor -- Leading Role', 'Actor -- Supporting Role',
+                     'Actress -- Leading Role', 'Actress -- Supporting Role']
+    
+
+
+
+    #feature_names = ["Cinematography", "Writing", "Directing", "Film Editing"]
     num_features = len(feature_names)
     
     feature_list, classification_list = parse_data(feature_names)
 
-    #sample_mask = [False for feature in feature_names]    
-    #for feature in FEATURES_TO_USE:
-    #    sample_mask[feature_names.index(feature)] = True
-
-    #for features, classification in zip(feature_list, classification_list):
-    #    print features, classification
-
-
     # Decision Tree
+    '''
     tree = sklearn_tree.DecisionTreeClassifier()
     tree = tree.fit(feature_list, classification_list)
 
@@ -127,7 +132,7 @@ def main():
     # Support Vector Machine
     svm = sklearn_svm.SVC()
     svm.fit(feature_list, classification_list)
-
+    '''
     
     # Build a forest and compute the feature importances
     forest = ExtraTreesClassifier(n_estimators=250,
@@ -138,7 +143,11 @@ def main():
     importances = forest.feature_importances_
     std = np.std([tree.feature_importances_ for tree in forest.estimators_],
                  axis=0)
-    indices = np.argsort(importances)[::-1]
+    #indices = np.argsort(importances)[::-1]
+    indices = np.argsort(importances)
+
+    feature_titles = [' '.join(feature_names[idx].replace('--','').split()[0:2]) 
+                      for idx in indices]
     
     # Print the feature ranking
     print "Feature ranking:"
@@ -147,19 +156,33 @@ def main():
         print "%d. feature %d (%f)" % (f+1, indices[f], importances[indices[f]])
         
     # Plot the feature importances of the forest
-    import pylab as pl
-    pl.figure()
-    pl.title("Feature importances")
-
-    #pl.bar(xrange(num_features), importances[indices],
-    #       color="r", yerr=std[indices], align="center")
-    pl.bar(xrange(num_features), importances[indices],
+    '''
+    plt.figure()
+    plt.title("Feature importances")
+    plt.bar(xrange(num_features), importances[indices],
            color="r", align="center")
     
-    pl.xticks(xrange(num_features), indices)
-    pl.xlim([-1, num_features])
-    #pl.show()
-    pl.savefig("ForestFeatures.pdf")
+    plt.xticks([point - .5 for point in xrange(num_features)], 
+               feature_titles, rotation=45, size="small")
+    plt.xlim([-1, num_features])
+    plt.savefig("ForestFeatures.pdf")
+    '''
+    
+    fig = plt.figure(figsize=(9,7))
+    ax1 = fig.add_subplot(111)
+    #plt.subplots_adjust(left=0.115, right=0.88)
+    plt.subplots_adjust(left=0.25, right=0.88)
+    fig.canvas.set_window_title('Oscars')
+    pos = np.arange(num_features)+0.5    #Center bars on the Y-axis ticks
+    rects = ax1.barh(pos, importances[indices], 
+                     align='center', height=0.5, color='m')
+
+    ax1.axis([0, 0.5, 0, num_features])
+    plt.yticks(pos, feature_titles)
+    ax1.set_title('Oscars')
+    plt.text(50, -0.5, 'Importance',
+            horizontalalignment='center', size='small')
+    plt.savefig("ForestFeatures.pdf")
 
 
 if __name__ == "__main__":
