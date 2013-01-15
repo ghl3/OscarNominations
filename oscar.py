@@ -3,6 +3,7 @@
 import re
 import csv
 import StringIO
+import pydot
 
 from sklearn import tree
 
@@ -91,12 +92,12 @@ def parse_data():
         feature_list.append(feature_vector)
         classification_list.append(movie_dict.get("Best Picture", 0))
 
-    return (feature_list, classification_list)
+    return (feature_list, classification_list, FEATURES)
 
 
 def main():
 
-    feature_list, classification_list = parse_data()
+    feature_list, classification_list, feature_names = parse_data()
 
     for features, classification in zip(feature_list, classification_list):
         print features, classification
@@ -104,8 +105,11 @@ def main():
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(feature_list, classification_list)
 
+    # Make dot file output
     with open("tree.dot", 'w') as f:
-        f = tree.export_graphviz(clf, out_file=f)
+        f = tree.export_graphviz(clf, out_file=f, 
+                                 feature_names=feature_names)
+
 
 if __name__ == "__main__":
     main()
