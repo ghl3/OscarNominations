@@ -5,8 +5,8 @@ import csv
 import StringIO
 import pydot
 
-from sklearn import tree
-
+from sklearn import tree as sklearn_tree
+from sklearn import svm as sklearn_svm
 
 def parse_data(FEATURES):
 
@@ -110,13 +110,17 @@ def main():
     #for features, classification in zip(feature_list, classification_list):
     #    print features, classification
     
-    clf = tree.DecisionTreeClassifier()
-    clf = clf.fit(feature_list, classification_list)
+    tree = sklearn_tree.DecisionTreeClassifier()
+    tree = tree.fit(feature_list, classification_list)
 
     # Make dot file output
     with open("tree.dot", 'w') as f:
-        f = tree.export_graphviz(clf, out_file=f, 
-                                 feature_names=feature_names)
+        f = sklearn_tree.export_graphviz(tree, out_file=f, 
+                                         feature_names=feature_names)
+
+
+    svm = sklearn_svm.SVC()
+    svm.fit(feature_list, classification_list)
 
 
 if __name__ == "__main__":
