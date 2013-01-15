@@ -16,7 +16,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-def parse_data(FEATURES):
+def parse_data(FEATURES, nomination_data_only=False):
 
     # Feature Key:
     # 0 - Neither Nominated Nore Won
@@ -32,18 +32,13 @@ def parse_data(FEATURES):
     ACTOR_FEATURES = ['Actor -- Leading Role', 'Actor -- Supporting Role',
                       'Actress -- Leading Role', 'Actress -- Supporting Role']
 
-    #FEATURES = MOVIE_FEATURES + ACTOR_FEATURES
-
     #NUM_FEATURES = len(MOVIE_FEATURES) + len(ACTOR_FEATURES)
     NUM_FEATURES = len(FEATURES)
 
     # What we are trying to predict
-    CATEGORY = ['Best Picture']
-
+    CLASSIFICATION = ['Best Picture']
 
     academy_data = csv.reader(open('academy_awards.csv'), skipinitialspace=True)
-
-    #academy_data = open("academy_awards.csv", "r")
 
     data = {}
 
@@ -70,16 +65,25 @@ def parse_data(FEATURES):
                 raise Exception
             film = m.group(1) #datum[3] # Need regex for: "movie {character}"
 
-        elif category in CATEGORY:
+        elif category in CLASSIFICATION:
             film = datum[2]
             producer = datum[3]
 
         else:
             continue
 
+        # All movies get a '0' for all features by default
+        # If they're nominated, they get a 1 for all nominated
+        # features.  If we're not using 'nominations only', 
+        # they get a 2
+        # For the best picture, we want to include all three
         Won = 0
-        if datum[4] == "NO": Won = 1
-        elif datum[4] == "YES": Won = 2
+        if nomination_data_only and category not in CLASSIFICATION:
+            if datum[4] == "NO": Won = 1
+            elif datum[4] == "YES": Won = 1
+        else:
+            if datum[4] == "NO": Won = 1
+            elif datum[4] == "YES": Won = 2
 
         movie_id = (film, year)
 
@@ -88,13 +92,15 @@ def parse_data(FEATURES):
             
         data[movie_id][category] = Won
 
-
     # Now, turn the dictionary into lists of
     # features and classification
-
+    # Only include movies that got a best
+    # picture nomination
     feature_list = []
     classification_list = []
     for movie_id, movie_dict in data.iteritems():
+        if "Best Picture" not in movie_dict:
+            continue
         feature_vector = [0 for feature in range(NUM_FEATURES)]
         for feature, value in movie_dict.iteritems():
             if feature not in FEATURES: continue
@@ -124,7 +130,7 @@ def main():
     feature_list, classification_list = parse_data(features_minimal)
 
     # Decision Tree
-    tree = sklearn_tree.DecisionTreeClassifier()
+    tree = sklearn_tree.DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=4)
     tree = tree.fit(feature_list, classification_list)
     
     with open("tree.dot", 'w') as f:
