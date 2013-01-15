@@ -2,8 +2,11 @@
 
 import re
 import csv
+import StringIO
 
-def main():
+from sklearn import tree
+
+def parse_data():
 
     # Feature Key:
     # 0 - Neither Nominated Nore Won
@@ -19,6 +22,10 @@ def main():
     ACTOR_FEATURES = ['Actor -- Leading Role', 'Actor -- Supporting Role',
                       'Actress -- Leading Role', 'Actress -- Supporting Role']
 
+    FEATURES = MOVIE_FEATURES + ACTOR_FEATURES
+
+    NUM_FEATURES = len(MOVIE_FEATURES) + len(ACTOR_FEATURES)
+
     # What we are trying to predict
     CATEGORY = ['Best Picture']
 
@@ -31,8 +38,6 @@ def main():
 
     next(academy_data)
     for datum in academy_data:
-        #datum = award.replace('"', '').replace("'", '').split(',')
-        #datum = award.split(',')
         year = datum[0]
         category = datum[1].strip()
         
@@ -46,19 +51,19 @@ def main():
             if '; and' in datum[3]:
                 continue
 
-            if 'To Charles Chaplin, for acting, writing, directing and producing The Circus.' in datum[2]: continue
+            if 'To Charles Chaplin, for acting, writing, directing and producing The Circus.' \
+                    in datum[2]: continue
 
-            print datum[3],
             m = re.match(r"(.*?)\{(.*?)\}", datum[3])
             if m==None:
-                print datum
                 raise Exception
-            else:
-                print m, m.group()
             film = m.group(1) #datum[3] # Need regex for: "movie {character}"
 
+        elif category in CATEGORY:
+            film = datum[2]
+            producer = datum[3]
+
         else:
-            print "Unknown category: ", category
             continue
 
         Won = 0
@@ -73,8 +78,34 @@ def main():
         data[movie_id][category] = Won
 
 
-    print data
+    # Now, turn the dictionary into lists of
+    # features and classification
 
+    feature_list = []
+    classification_list = []
+    for movie_id, movie_dict in data.iteritems():
+        feature_vector = [0 for feature in range(NUM_FEATURES)]
+        for feature, value in movie_dict.iteritems():
+            if feature not in FEATURES: continue
+            feature_vector[FEATURES.index(feature)] = value
+        feature_list.append(feature_vector)
+        classification_list.append(movie_dict.get("Best Picture", 0))
+
+    return (feature_list, classification_list)
+
+
+def main():
+
+    feature_list, classification_list = parse_data()
+
+    for features, classification in zip(feature_list, classification_list):
+        print features, classification
+    
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(feature_list, classification_list)
+
+    with open("tree.dot", 'w') as f:
+        f = tree.export_graphviz(clf, out_file=f)
 
 if __name__ == "__main__":
     main()
