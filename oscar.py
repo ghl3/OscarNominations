@@ -184,5 +184,13 @@ def main():
     plt.savefig("ForestFeatures.pdf")
 
 
+    # Make a plot of:
+    #
+    #                  Best Actor | Best Actress | Best Supporting Actor | Best Supporting Actress
+    # Not Nominated %   (Won Best picture  / Lost Best Picture)
+    # Nominated %
+    # Won %
+    #
+
 if __name__ == "__main__":
     main()
