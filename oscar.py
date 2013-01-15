@@ -111,6 +111,32 @@ def parse_data(FEATURES, nomination_data_only=False):
     return (feature_list, classification_list)
 
 
+def test_classification(classifier, features, classifications, **kwargs):
+    """ Assume that a classifier has a 'fit' method
+    """
+
+    print "Classificatin accuracy for: ", classifier.__class__.__name__
+
+    training_features, training_class = features[1::2], classifications[1::2]
+    validation_features, validation_class = features[0::2], classifications[0::2]
+
+    clf = classifier.fit(training_features, training_class, **kwargs)
+
+    correct = 0
+    incorrect = 0
+
+    for features, classification in zip(validation_features, validation_class):
+        prediction = clf.predict(features)[0]
+        if prediction == classification: correct += 1
+        else: incorrect += 1
+        
+    accuracy = correct / (correct + incorrect)
+
+    print "Num Correct: %s" % correct
+    print "Num Incorrect: %s" % incorrect
+    print "Accuracy: %s" % accuracy
+
+
 def main():
 
     feature_names = ['Animated Feature Film', 'Cinematography', 'Costume Design', 'Directing', 
@@ -131,6 +157,8 @@ def main():
 
     # Decision Tree
     tree = sklearn_tree.DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=4)
+
+    test_classification(tree, feature_list, classification_list)
     tree = tree.fit(feature_list, classification_list)
     
     with open("tree.dot", 'w') as f:
@@ -150,13 +178,14 @@ def main():
 
     # Support Vector Machine
     svm = sklearn_svm.SVC()
+    test_classification(svm, feature_list, classification_list)
     svm.fit(feature_list, classification_list)
     
     # Build a forest and compute the feature importances
     forest = ExtraTreesClassifier(n_estimators=250,
                                   compute_importances=True,
                                   random_state=0)
-    
+    test_classification(forest, feature_list, classification_list)
     forest.fit(feature_list, classification_list)
     importances = forest.feature_importances_
     std = np.std([tree.feature_importances_ for tree in forest.estimators_],
@@ -182,7 +211,6 @@ def main():
     #plt.text(.25, 2.0, 'Importance', horizontalalignment='center')
     plt.xlabel("Relative Importance")
     plt.savefig("ForestFeatures.pdf")
-
 
     # Make a plot of:
     #
