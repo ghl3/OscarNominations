@@ -7,7 +7,8 @@ import pydot
 
 from sklearn import tree
 
-def parse_data():
+
+def parse_data(FEATURES):
 
     # Feature Key:
     # 0 - Neither Nominated Nore Won
@@ -23,9 +24,10 @@ def parse_data():
     ACTOR_FEATURES = ['Actor -- Leading Role', 'Actor -- Supporting Role',
                       'Actress -- Leading Role', 'Actress -- Supporting Role']
 
-    FEATURES = MOVIE_FEATURES + ACTOR_FEATURES
+    #FEATURES = MOVIE_FEATURES + ACTOR_FEATURES
 
-    NUM_FEATURES = len(MOVIE_FEATURES) + len(ACTOR_FEATURES)
+    #NUM_FEATURES = len(MOVIE_FEATURES) + len(ACTOR_FEATURES)
+    NUM_FEATURES = len(FEATURES)
 
     # What we are trying to predict
     CATEGORY = ['Best Picture']
@@ -92,15 +94,21 @@ def parse_data():
         feature_list.append(feature_vector)
         classification_list.append(movie_dict.get("Best Picture", 0))
 
-    return (feature_list, classification_list, FEATURES)
+    return (feature_list, classification_list)
 
 
 def main():
 
-    feature_list, classification_list, feature_names = parse_data()
+    feature_names = ["Cinematography", "Writing", "Directing", "Film Editing"]
 
-    for features, classification in zip(feature_list, classification_list):
-        print features, classification
+    feature_list, classification_list = parse_data(feature_names)
+
+    #sample_mask = [False for feature in feature_names]    
+    #for feature in FEATURES_TO_USE:
+    #    sample_mask[feature_names.index(feature)] = True
+
+    #for features, classification in zip(feature_list, classification_list):
+    #    print features, classification
     
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(feature_list, classification_list)
