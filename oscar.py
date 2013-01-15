@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import division
+
 import re
 import csv
 import StringIO
@@ -168,6 +170,7 @@ def main():
     plt.savefig("ForestFeatures.pdf")
     '''
     
+    importance_max = 0.5
     fig = plt.figure(figsize=(9,7))
     ax1 = fig.add_subplot(111)
     #plt.subplots_adjust(left=0.115, right=0.88)
@@ -177,11 +180,11 @@ def main():
     rects = ax1.barh(pos, importances[indices], 
                      align='center', height=0.5, color='m')
 
-    ax1.axis([0, 0.5, 0, num_features])
+    ax1.axis([0, importance_max, 0, num_features])
     plt.yticks(pos, feature_titles)
     ax1.set_title('Oscars')
-    plt.text(50, -0.5, 'Importance',
-            horizontalalignment='center', size='small')
+    #plt.text(.25, 2.0, 'Importance', horizontalalignment='center')
+    plt.xlabel("Relative Importance")
     plt.savefig("ForestFeatures.pdf")
 
 
