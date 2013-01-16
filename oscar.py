@@ -143,20 +143,6 @@ def test_classification(classifier, features, classifications, **kwargs):
     print "Accuracy: %s" % accuracy
 
 
-def make_table(data, name):
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-
-    doc = SimpleDocTemplate(name, pagesize=letter)
-    elements = []
-    t=Table(data)
-    #t.setStyle(TableStyle([('BACKGROUND',(1,1),(-2,-2),colors.green),
-    #                                          ('TEXTCOLOR',(0,0),(1,-1),colors.red)]))
-    elements.append(t)
-    doc.build(elements)
-
-
 def main():
 
     feature_names = ['Animated Feature Film', 'Cinematography', 'Costume Design', 'Directing', 
