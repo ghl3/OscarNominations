@@ -286,8 +286,6 @@ def main():
         best_supp_actor.update(features, classification)
         best_supp_actress.update(features, classification)
 
-    print '\n'
-
     table = []
 
     table.append(["Best Actor"] + best_actor.row())
@@ -295,70 +293,16 @@ def main():
     table.append(["Best Supporting Actor"] + best_supp_actor.row())
     table.append(["Best Supporintg Actress"] + best_supp_actress.row())
 
-    '''
-    table.append(best_actor.row("Won"))
-    table.append(best_actor.row("Nominated"))
-
-    table.append(best_actress.row("Won"))
-    table.append(best_actress.row("Nominated"))
-
-    table.append(best_supp_actor.row("Won"))
-    table.append(best_supp_actor.row("Nominated"))
-
-    table.append(best_supp_actress.row("Won"))
-    table.append(best_supp_actress.row("Nominated"))
-    '''
-
-    '''
-    table.append((best_actor.frac("Won","Nominated"), best_actor.frac("Nominated", "Nominated"), best_actor.frac("None", "Nominated")))
-
-    table.append((best_actress.frac("Won","Won"), best_actress.frac("Nominated", "Won"), best_actress.frac("None", "Won")))
-    table.append((best_actress.frac("Won","Nominated"), best_actress.frac("Nominated", "Nominated"), best_actress.frac("None", "Nominated")))
-
-    table.append((best_supp_actor.frac("Won","Won"), best_supp_actor.frac("Nominated", "Won"), best_supp_actor.frac("None", "Won")))
-    table.append((best_supp_actor.frac("Won","Nominated"), best_supp_actor.frac("Nominated", "Nominated"), best_supp_actor.frac("None", "Nominated")))
-
-    table.append((best_supp_actress.frac("Won","Won"), best_supp_actress.frac("Nominated", "Won"), best_supp_actress.frac("None", "Won")))
-    table.append((best_supp_actress.frac("Won","Nominated"), best_supp_actress.frac("Nominated", "Nominated"), best_supp_actress.frac("None", "Nominated")))
-    '''
-
-
-    '''
-    print "Won/Nominated/Nothing Best Actor given Won BP: %.2f/%.2f/%.2f" % table[0]
-    print "Won/Nominated/Nothing Best Actor given Nom BP: %.2f/%.2f/%.2f" % table[1]
-
-    print "Won/Nominated/Nothing Best Actress given Won BP: %.2f/%.2f/%.2f" % table[2]
-    print "Won/Nominated/Nothing Best Actress given Nom BP: %.2f/%.2f/%.2f" % table[3]
-
-    print "Won/Nominated/Nothing Best Supporting Actor given Won BP: %.2f/%.2f/%.2f" % table[4]
-    print "Won/Nominated/Nothing Best Supporting Actor given Nom BP: %.2f/%.2f/%.2f" % table[5]
-
-    print "Won/Nominated/Nothing Best Supporting Actress given Won BP: %.2f/%.2f/%.2f" % table[6]
-    print "Won/Nominated/Nothing Best Supporting Actress given Nom BP: %.2f/%.2f/%.2f" % table[7]
-    '''
-
     from prettytable import PrettyTable
     pretty_table = PrettyTable(["Category", "Won Award", "Nominated", "Not Nominated"])
     x.set_field_align("Category", "l")
     for row in table:
         pretty_table.add_row(row)
-    print pretty_table
 
+    print '\n'
+    print pretty_table
     print pretty_table.get_html_string()
 
-    #make_table(table, "actors.pdf")
-
-    #print "Won Best Actress: %.2f/%.2f" % (best_actress.frac("Won","Won"), best_actress.frac("Won", "Nominated"))
-    #print "Best Supporting Actor: %.2f/%.2f" % (best_supp_actor.frac("Won","Won"), best_supp_actor.frac("Won", "Nominated"))
-    #print "Best Supporting Actress: %.2f/%.2f" % (best_supp_actress.frac("Won","Won"), best_supp_actress.frac("Won", "Nominated"))
-
-    # Make a plot of:
-    #
-    #                  Best Actor | Best Actress | Best Supporting Actor | Best Supporting Actress
-    # Not Nominated %   (Won Best picture  / Lost Best Picture)
-    # Nominated %
-    # Won %
-    #
 
 if __name__ == "__main__":
     main()
