@@ -6,6 +6,7 @@ import re
 import csv
 import StringIO
 import pydot
+import copy
 
 from sklearn import tree as sklearn_tree
 from sklearn import svm as sklearn_svm
@@ -44,7 +45,7 @@ def parse_data(FEATURES, nomination_data_only=False):
 
     next(academy_data)
     for datum in academy_data:
-        year = datum[0]
+        year = datum[0].strip()
         category = datum[1].strip()
         
         if category in MOVIE_FEATURES:
@@ -63,7 +64,7 @@ def parse_data(FEATURES, nomination_data_only=False):
             m = re.match(r"(.*?)\{(.*?)\}", datum[3])
             if m==None:
                 raise Exception
-            film = m.group(1) #datum[3] # Need regex for: "movie {character}"
+            film = m.group(1).strip() #datum[3] # Need regex for: "movie {character}"
 
         elif category in CLASSIFICATION:
             film = datum[2]
@@ -117,6 +118,8 @@ def test_classification(classifier, features, classifications, **kwargs):
 
     print "Classificatin accuracy for: ", classifier.__class__.__name__
 
+    classifier = copy.deepcopy(classifier)
+
     training_features, training_class = features[1::2], classifications[1::2]
     validation_features, validation_class = features[0::2], classifications[0::2]
 
@@ -135,6 +138,20 @@ def test_classification(classifier, features, classifications, **kwargs):
     print "Num Correct: %s" % correct
     print "Num Incorrect: %s" % incorrect
     print "Accuracy: %s" % accuracy
+
+
+def make_table(data, name):
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+    doc = SimpleDocTemplate(name, pagesize=letter)
+    elements = []
+    t=Table(data)
+    #t.setStyle(TableStyle([('BACKGROUND',(1,1),(-2,-2),colors.green),
+    #                                          ('TEXTCOLOR',(0,0),(1,-1),colors.red)]))
+    elements.append(t)
+    doc.build(elements)
 
 
 def main():
@@ -211,6 +228,85 @@ def main():
     #plt.text(.25, 2.0, 'Importance', horizontalalignment='center')
     plt.xlabel("Relative Importance")
     plt.savefig("ForestFeatures.pdf")
+
+
+    class feature_stat:
+
+        feature = {'None' : 0, 'Nominated' : 1, 'Won': 2}
+
+        def __init__(self, name):
+            self.name = name
+            self.array = [ [0,0,0],  # Not Nominated BP
+                           [0,0,0],  # Nominated BP
+                           [0,0,0] ] # Won BP
+
+        def update(self, features, classification):
+            # Get the feature
+            idx = feature_names.index(self.name)
+            if idx not in range(len(feature_names)):
+                raise Exception
+            feature_value = features[idx]
+            is_best_picture = classification
+            self._update(feature_value, is_best_picture)
+
+        def _update(self, feature_value, is_best_picture):
+            assert feature_value in [0, 1, 2]
+            assert is_best_picture in [0, 1, 2]
+            self.array[is_best_picture][feature_value] += 1
+
+        def _frac(self, feature_value, is_best_picture):
+            assert feature_value in [0, 1, 2]
+            assert is_best_picture in [0, 1, 2]
+            return self.array[is_best_picture][feature_value]/sum(self.array[is_best_picture])
+
+        def frac(self, feature_string, best_picture_string):
+            return self._frac(self.feature[feature_string], 
+                              self.feature[best_picture_string])
+
+    best_actor = feature_stat('Actor -- Leading Role')
+    best_actress = feature_stat('Actress -- Leading Role')
+    best_supp_actor = feature_stat('Actor -- Supporting Role')
+    best_supp_actress = feature_stat('Actress -- Supporting Role')
+
+    for features, classification in zip(feature_list, classification_list):
+        best_actor.update(features, classification)
+        best_actress.update(features, classification)
+        best_supp_actor.update(features, classification)
+        best_supp_actress.update(features, classification)
+
+    print '\n'
+
+    table = []
+
+    table.append((best_actor.frac("Won","Won"), best_actor.frac("Nominated", "Won"), best_actor.frac("None", "Won")))
+    table.append((best_actor.frac("Won","Nominated"), best_actor.frac("Nominated", "Nominated"), best_actor.frac("None", "Nominated")))
+
+    table.append((best_actress.frac("Won","Won"), best_actress.frac("Nominated", "Won"), best_actress.frac("None", "Won")))
+    table.append((best_actress.frac("Won","Nominated"), best_actress.frac("Nominated", "Nominated"), best_actress.frac("None", "Nominated")))
+
+    table.append((best_supp_actor.frac("Won","Won"), best_supp_actor.frac("Nominated", "Won"), best_supp_actor.frac("None", "Won")))
+    table.append((best_supp_actor.frac("Won","Nominated"), best_supp_actor.frac("Nominated", "Nominated"), best_supp_actor.frac("None", "Nominated")))
+
+    table.append((best_supp_actress.frac("Won","Won"), best_supp_actress.frac("Nominated", "Won"), best_supp_actress.frac("None", "Won")))
+    table.append((best_supp_actress.frac("Won","Nominated"), best_supp_actress.frac("Nominated", "Nominated"), best_supp_actress.frac("None", "Nominated")))
+    
+    print "Won/Nominated/Nothing Best Actor given Won BP: %.2f/%.2f/%.2f" % table[0]
+    print "Won/Nominated/Nothing Best Actor given Nom BP: %.2f/%.2f/%.2f" % table[1]
+
+    print "Won/Nominated/Nothing Best Actress given Won BP: %.2f/%.2f/%.2f" % table[2]
+    print "Won/Nominated/Nothing Best Actress given Nom BP: %.2f/%.2f/%.2f" % table[3]
+
+    print "Won/Nominated/Nothing Best Supporting Actor given Won BP: %.2f/%.2f/%.2f" % table[4]
+    print "Won/Nominated/Nothing Best Supporting Actor given Nom BP: %.2f/%.2f/%.2f" % table[5]
+
+    print "Won/Nominated/Nothing Best Supporting Actress given Won BP: %.2f/%.2f/%.2f" % table[6]
+    print "Won/Nominated/Nothing Best Supporting Actress given Nom BP: %.2f/%.2f/%.2f" % table[7]
+
+    make_table(table, "actors.pdf")
+
+    #print "Won Best Actress: %.2f/%.2f" % (best_actress.frac("Won","Won"), best_actress.frac("Won", "Nominated"))
+    #print "Best Supporting Actor: %.2f/%.2f" % (best_supp_actor.frac("Won","Won"), best_supp_actor.frac("Won", "Nominated"))
+    #print "Best Supporting Actress: %.2f/%.2f" % (best_supp_actress.frac("Won","Won"), best_supp_actress.frac("Won", "Nominated"))
 
     # Make a plot of:
     #
