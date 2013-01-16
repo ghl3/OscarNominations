@@ -44,47 +44,50 @@ def parse_data(FEATURES, nomination_data_only=False):
     data = {}
 
     next(academy_data)
+
     for datum in academy_data:
-        year = datum[0].strip()
-        category = datum[1].strip()
+
+        # Skip based on a few exceptions
+        if '; and' in datum[3]:
+            continue
+        if 'To Charles Chaplin, for acting, writing, directing and producing The Circus.' \
+                in datum[2]: continue
+
+        datum = [item.strip() for item in datum]
+
+        (year, category) = datum[0:2]
         
         if category in MOVIE_FEATURES:
-            film = datum[2]
-            person = datum[3]
+            (film, person, won) = datum[2:5]
 
         elif category in ACTOR_FEATURES:
-            actor = datum[2]
-            
-            if '; and' in datum[3]:
-                continue
-
-            if 'To Charles Chaplin, for acting, writing, directing and producing The Circus.' \
-                    in datum[2]: continue
-
-            m = re.match(r"(.*?)\{(.*?)\}", datum[3])
+            (actor, film_str, won) = datum[2:5]
+            m = re.match(r"(.*?)\{(.*?)\}", film_str)
             if m==None:
                 raise Exception
-            film = m.group(1).strip() #datum[3] # Need regex for: "movie {character}"
+            film = m.group(1).strip()
 
         elif category in CLASSIFICATION:
-            film = datum[2]
+            (film, producer) = datum[2:4]
             producer = datum[3]
 
         else:
             continue
 
         # All movies get a '0' for all features by default
-        # If they're nominated, they get a 1 for all nominated
-        # features.  If we're not using 'nominations only', 
-        # they get a 2
-        # For the best picture, we want to include all three
+        # If they're only nominated, they get a 1 for that feature.
+        # If they win, they get a 2 for that feature.
         Won = 0
-        if nomination_data_only and category not in CLASSIFICATION:
-            if datum[4] == "NO": Won = 1
-            elif datum[4] == "YES": Won = 1
+        if datum[4] == "NO": Won = 1
+        elif datum[4] == "YES": Won = 2
         else:
-            if datum[4] == "NO": Won = 1
-            elif datum[4] == "YES": Won = 2
+            raise Exception
+
+        # If we're only using 'nominated' as a feature category
+        # then we ignore if it won a feature category and only
+        # classify it based on nomination
+        if nomination_data_only and category not in CLASSIFICATION:
+            Won=1
 
         movie_id = (film, year)
 
