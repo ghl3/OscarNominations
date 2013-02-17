@@ -17,7 +17,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-def parse_data(FEATURES, nomination_data_only=False):
+def parse_data(FEATURES, nomination_data_only=True):
 
     # Feature Key:
     # 0 - Neither Nominated Nore Won
@@ -159,7 +159,7 @@ def main():
     num_features = len(feature_names)
 
     # For trees, use the minimal features
-    feature_list, classification_list = parse_data(features_minimal)
+    feature_list, classification_list = parse_data(features_minimal, True)
 
     # Decision Tree
     tree = sklearn_tree.DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=4)
@@ -180,7 +180,7 @@ def main():
     graph.write_pdf("tree.pdf", prog='dot') 
 
     # Use the full feature list for SVM and Random Forests
-    feature_list, classification_list = parse_data(feature_names)
+    feature_list, classification_list = parse_data(feature_names, True)
 
     # Support Vector Machine
     svm = sklearn_svm.SVC()
@@ -218,6 +218,9 @@ def main():
     plt.xlabel("Relative Importance")
     plt.savefig("ForestFeatures.pdf")
 
+
+    # Do some plotting
+    feature_list, classification_list = parse_data(feature_names, False)
 
     class feature_stat:
 
@@ -281,7 +284,7 @@ def main():
 
     from prettytable import PrettyTable
     pretty_table = PrettyTable(["Category", "Won Award", "Nominated", "Not Nominated"])
-    x.set_field_align("Category", "l")
+    #pretty_table.set_field_align("Category", "l")
     for row in table:
         pretty_table.add_row(row)
 
